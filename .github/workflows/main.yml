@@ -34,7 +34,7 @@ jobs:
         run: |
           echo "Stage: ${{ github.event.inputs.module-stage }}"
           echo "environment=prod" >> $GITHUB_ENV
-          echo "environment=dev" >> $GITHUB_OUTPUTS
+          echo "environment=dev" >> $GITHUB_OUTPUT
 
   plan-1-bootstrap:
     name: Plan 1-bootstrap
