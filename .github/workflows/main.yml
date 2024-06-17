@@ -61,5 +61,6 @@ jobs:
           TF_LOG: DEBUG
         run: |
           env
-          echo "Module stage: ${{ github.event.inputs.module-stage }}"
-          echo "Output env: ${{ needs.prepare.outputs.environment }}"
+          STAGE=${{ github.event.inputs.module-stage }}
+          ENVIR=${{ needs.prepare.outputs.environment }}
+          echo "$STAGE, $ENVIR"
