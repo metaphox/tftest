@@ -37,8 +37,7 @@ jobs:
         id: determine-env
         run: |
           echo "Stage: ${{ github.event.inputs.module-stage }}"
-          echo "environment=prod" >> $GITHUB_ENV
-          echo "environment=dev" >> $GITHUB_OUTPUT
+          echo "environment=prod" >> $GITHUB_OUTPUT
 
   plan-1-bootstrap:
     name: Plan 1-bootstrap
@@ -62,5 +61,5 @@ jobs:
           TF_LOG: DEBUG
         run: |
           env
-          echo $GITHUB_ENV
-          echo $GITHUB_OUTPUT
+          echo "Module stage: ${{ github.event.inputs.module-stage }}"
+          echo "Output env: ${{ needs.prepare.outputs.environment}}"
