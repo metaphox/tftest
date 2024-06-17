@@ -62,4 +62,4 @@ jobs:
         run: |
           env
           echo "Module stage: ${{ github.event.inputs.module-stage }}"
-          echo "Output env: ${{ job.prepare.outputs.environment }}"
+          echo "Output env: ${{ needs.prepare.outputs.environment }}"
