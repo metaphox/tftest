@@ -20,6 +20,10 @@ on:
         - 3-security
         - 4-project
 
+env:
+  TF_INPUT: false
+  TF_IN_AUTOMATION: true
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -57,4 +61,6 @@ jobs:
         env:
           TF_LOG: DEBUG
         run: |
-          terraform -chdir=$environment init
+          env
+          echo $GITHUB_ENV
+          echo $GITHUB_OUTPUT
