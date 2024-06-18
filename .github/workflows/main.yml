@@ -31,6 +31,8 @@ jobs:
   prepare:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    env:
+      MODULESTAGE: ${{ github.event.inputs.module-stage }}
     outputs:
       environment: ${{ steps.determine-env.outputs.environment }}
       applystages: ${{ steps.determine-stages.outputs.applystages }}
@@ -39,12 +41,12 @@ jobs:
       - name: determine env
         id: determine-env
         run: |
-          echo "Stage: ${{ github.event.inputs.module-stage }}"
           echo "environment=prod" >> $GITHUB_OUTPUT
       - name: determine stages
         id: determine-stages
         run: |
-          [ -z "$STAGE" ] || [[ $STAGE == 0-* ]] && echo 'applystages=[ "1-bootstrap", "2-network", "3-security", "4-project"]' >> $GITHUB_OUTPUT || echo "$STAGE" >> $GITHUB_OUTPUT
+          echo "Stage: ${{ github.event.inputs.module-stage }}"
+          [ -z "$MODULESTAGE" ] || [[ $MODULESTAGE == 0-* ]] && echo 'applystages=[ "1-bootstrap", "2-network", "3-security", "4-project"]' >> $GITHUB_OUTPUT || echo "$MODULESTAGE" >> $GITHUB_OUTPUT
           echo "stages=1-bootstrap,2-network,3-security,4-project" >> $GITHUB_OUTPUT
 
   plan:
@@ -53,7 +55,7 @@ jobs:
     needs: [prepare]
     strategy:
       matrix:
-        stages: [ '1-bootstrap', '2-network', '3-security', '4-project' ]
+        stages: [ '1-bootstrap' ]
       max-parallel: 1 # important to ensure sequential execution
     environment: ${{ needs.prepare.outputs.environment }}
     steps:
