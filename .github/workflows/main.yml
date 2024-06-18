@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       environment: ${{ steps.determine-env.outputs.environment }}
-      applystages: ${{ steps.determine-stages.outputs.outputstages }}
+      applystages: ${{ steps.determine-stages.outputs.applystages }}
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: determine env
