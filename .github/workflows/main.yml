@@ -84,7 +84,7 @@ jobs:
     - name: Terraform Format
       run: |
         terraform fmt -recursive -check
-        STAGES_CLEANED=$(echo '${{ needs.prepare.outputs.planstages }}' | sed 's/\[\|\]\|"//g')
+        STAGES_CLEANED=$(echo '${{ needs.prepare.outputs.planstages }}' | sed -E 's/\[|\]|"| //g')
         IFS=',' read -r -a STAGES_ARRAY <<< "$STAGES_CLEANED"
         for stage in "${STAGES_ARRAY[@]}"; do
           terraform -chdir=$stage validate
