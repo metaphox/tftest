@@ -51,6 +51,34 @@ jobs:
           [ -z "$MODULESTAGE" ] || ([[ $MODULESTAGE == 0-* ]] && echo "applystages=$ALLSTAGES" >> $GITHUB_OUTPUT) || echo "applystages=[\"$MODULESTAGE\"]" >> $GITHUB_OUTPUT
           echo "planstages=$ALLSTAGES" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
+  
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    needs: [prepare]
+    env:
+      MODULESTAGES: $
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Test Step1
+        run: |
+          STAGES_CLEANED=$(echo '${{ needs.prepare.outputs.planstages }}' | sed -E 's/\[|\]|"| //g')
+          IFS=',' read -r -a MODULESTAGES <<< "$STAGES_CLEANED"
+          for stage in "${MODULESTAGES[@]}"; do
+            terraform -chdir=$stage init
+          done
+        
+      - name: Test Step2
+        run: |
+          for stage in "${MODULESTAGES[@]}"; do
+            terraform -chdir=$stage validate
+          done
 
   plan:
     name: Terraform Plan
@@ -58,9 +86,11 @@ jobs:
     needs: [prepare]
     strategy:
       matrix:
-        stage: [ '1-bootstrap', '2-network', '3-security', '4-project' ]
+        stage: [ '1-bootstrap' ]
       max-parallel: 1 # important to ensure sequential execution
     environment: ${{ needs.prepare.outputs.environment }}
+    env:
+      MODULESTAGES: $
     outputs:
       tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
 
