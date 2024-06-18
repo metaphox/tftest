@@ -73,13 +73,13 @@ jobs:
           for stage in "${MODULESTAGES[@]}"; do
             terraform -chdir=$stage init -backend=false
             terraform -chdir=$stage validate
-            terrafom -chdir=$stage fmt -check -recursive
+            terraform -chdir=$stage fmt -check -recursive
           done
 
   plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
-    needs: [prepare]
+    needs: [prepare, validate]
     strategy:
       matrix:
         stage: [ '1-bootstrap' ]
