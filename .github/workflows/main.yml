@@ -35,6 +35,7 @@ jobs:
       MODULESTAGE: ${{ github.event.inputs.module-stage }}
     outputs:
       environment: ${{ steps.determine-env.outputs.environment }}
+      planstages: ${{ steps.determine-stages.outputs.planstages }}
       applystages: ${{ steps.determine-stages.outputs.applystages }}
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -47,7 +48,7 @@ jobs:
         run: |
           echo "Stage: ${{ github.event.inputs.module-stage }}, modulestage: $MODULESTAGE"
           [ -z "$MODULESTAGE" ] || ([[ $MODULESTAGE == 0-* ]] && echo 'applystages=["1-bootstrap", "2-network", "3-security", "4-project"]' >> $GITHUB_OUTPUT) || echo "applystages=$MODULESTAGE" >> $GITHUB_OUTPUT
-          echo "stages=1-bootstrap,2-network,3-security,4-project" >> $GITHUB_OUTPUT
+          echo "planstages=["1-bootstrap", "2-network", "3-security", "4-project"]" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
   plan:
@@ -56,29 +57,79 @@ jobs:
     needs: [prepare]
     strategy:
       matrix:
-        stages: [ '1-bootstrap' ]
+        stage: [ '1-bootstrap', '2-network', '3-security', '4-project' ]
       max-parallel: 1 # important to ensure sequential execution
     environment: ${{ needs.prepare.outputs.environment }}
+    outputs:
+      tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
+
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.7
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-      - uses: terraform-linters/setup-tflint@v3
-        with:
-          tflint_version: v0.48.0
-      - name: Terraform init
-        id: tf-init
-        run: |
-          terraform -chdir=${{ matrix.stages }} init
-      - name: Terraform plan
-        id: tf-plan
-        run: |
-          terraform -chdir=${{ matrix.stages }} plan
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Install the latest version of the Terraform CLI
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_wrapper: false
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform -chdir=${{ matrix.stage }} init
+
+    # Checks that all Terraform configuration files adhere to a canonical format
+    # Will fail the build if not
+    - name: Terraform Format
+      run: terraform fmt -check
+
+    # Generates an execution plan for Terraform
+    # An exit code of 0 indicated no changes, 1 a terraform failure, 2 there are pending changes.
+    - name: Terraform Plan
+      id: tf-plan
+      run: |
+        export exitcode=0
+        terraform -chdir=${{ matrix.stage }} plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
+
+        echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+        
+        if [ $exitcode -eq 1 ]; then
+          echo Terraform Plan Failed!
+          exit 1
+        else 
+          exit 0
+        fi
+        
+    # Save plan to artifacts  
+    - name: Publish Terraform Plan
+      uses: actions/upload-artifact@v4
+      with:
+        name: tfplan
+        path: tfplan
+        
+    # Create string output of Terraform Plan
+    - name: Create String Output
+      id: tf-plan-string
+      run: |
+        TERRAFORM_PLAN=$(terraform show -no-color tfplan)
+        
+        delimiter="$(openssl rand -hex 8)"
+        echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+        echo "## Terraform Plan Output" >> $GITHUB_OUTPUT
+        echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo '```terraform' >> $GITHUB_OUTPUT
+        echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
+        echo '```' >> $GITHUB_OUTPUT
+        echo "</details>" >> $GITHUB_OUTPUT
+        echo "${delimiter}" >> $GITHUB_OUTPUT
+        
+    # Publish Terraform Plan as task summary
+    - name: Publish Terraform Plan to Task Summary
+      env:
+        SUMMARY: ${{ steps.tf-plan-string.outputs.summary }}
+      run: |
+        echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
   
   apply:
     name: Terraform Apply
@@ -93,7 +144,24 @@ jobs:
       max-parallel: 1 # important to ensure sequential execution
     environment: ${{ needs.prepare.outputs.environment }}
     steps:
-      - name: Terraform apply
-        id: tf-apply
-        run: |
-          terraform -chdir=${{ matrix.stage }} apply -auto-approve
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        run: terraform init
+
+      # Download saved plan from artifacts  
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+
+      # Terraform Apply
+      - name: Terraform Apply
+        run: terraform -chdir=${{ matrix.stage }} apply -auto-approve ${{ matrix.stage }}-tfplan
