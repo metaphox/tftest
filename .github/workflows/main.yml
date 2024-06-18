@@ -87,14 +87,13 @@ jobs:
     if: ${{ needs.prepare.outputs.applystages != '' }}
     env:
       APPLYSTAGES: ${{ needs.prepare.outputs.applystages }}
-    # strategy:
-    #   matrix:
-    #     stages: ${{ fromJson(needs.prepare.outputs.applystages) }}
-    #   max-parallel: 1 # important to ensure sequential execution
+    strategy:
+      matrix:
+        stage: ${{ fromJson(needs.prepare.outputs.applystages) }}
+      max-parallel: 1 # important to ensure sequential execution
     environment: ${{ needs.prepare.outputs.environment }}
     steps:
       - name: Terraform apply
         id: tf-apply
         run: |
-          echo "Apply stages: ${{ needs.prepare.outputs.applystages }}"
-          env
+          terraform -chdir=${{ matrix.stage }} apply -auto-approve
