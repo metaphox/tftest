@@ -165,4 +165,4 @@ jobs:
 
       # Terraform Apply
       - name: Terraform Apply
-        run: terraform -chdir=${{ matrix.stage }} apply -auto-approve ${{ matrix.stage }}-tfplan
+        run: terraform -chdir=${{ matrix.stage }} apply -auto-approve tfplan
