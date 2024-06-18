@@ -16,5 +16,5 @@ terraform {
 resource "local_file" "providers" {
   file_permission = "0644"
   filename        = "./test.providers.tf"
-  content         = "testing"
+  content         = "security"
 }
