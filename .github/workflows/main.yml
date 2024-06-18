@@ -82,7 +82,7 @@ jobs:
   apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
-    if: ${{ needs.prepare.outputs.applystages }}
+    if: ${{ needs.prepare.outputs.applystages != '' }}
     needs: [plan]
     # strategy:
     #   matrix:
