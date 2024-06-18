@@ -88,20 +88,6 @@ jobs:
       max-parallel: 1 # important to ensure sequential execution
     environment: ${{ needs.prepare.outputs.environment }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.7
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-      - uses: terraform-linters/setup-tflint@v3
-        with:
-          tflint_version: v0.48.0
-      - name: Terraform init
-        id: tf-init
-        run: |
-          terraform -chdir=${{ matrix.stages }} init
       - name: Terraform apply
         id: tf-apply
         run: |
