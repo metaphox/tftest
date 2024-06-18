@@ -167,4 +167,4 @@ jobs:
       - name: Terraform Apply
         run: |
           ls -la ${{ matrix.stage }}
-          #terraform -chdir=${{ matrix.stage }} apply -auto-approve ${{ matrix.stage }}-tfplan
+          terraform -chdir=${{ matrix.stage }} apply -auto-approve tfplan
