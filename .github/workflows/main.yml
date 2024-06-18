@@ -71,6 +71,5 @@ jobs:
         env:
           TF_LOG: DEBUG
         run: |
-          env
-          terraform -chdir=
-          echo "env = ${{ needs.prepare.outputs.environment }}"
+          terraform -chdir=${{ matrix.stages }} init
+          terraform -chdir=${{ matrix.stages }} plan
