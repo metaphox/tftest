@@ -68,16 +68,12 @@ jobs:
 
       - name: Test Step1
         run: |
-          STAGES_CLEANED=$(echo '${{ needs.prepare.outputs.planstages }}' | sed -E 's/\[|\]|"| //g')
-          IFS=',' read -r -a MODULESTAGES <<< "$STAGES_CLEANED"
+          STAGES_CLEANSED=$(echo '${{ needs.prepare.outputs.planstages }}' | sed -E 's/\[|\]|"| //g')
+          IFS=',' read -r -a MODULESTAGES <<< "$STAGES_CLEANSED"
           for stage in "${MODULESTAGES[@]}"; do
-            terraform -chdir=$stage init
-          done
-        
-      - name: Test Step2
-        run: |
-          for stage in "${MODULESTAGES[@]}"; do
+            terraform -chdir=$stage init -backend=false
             terraform -chdir=$stage validate
+            terrafom -chdir=$stage fmt -check -recursive
           done
 
   plan:
