@@ -33,6 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MODULESTAGE: ${{ github.event.inputs.module-stage }}
+      ALLSTAGES: '["1-bootstrap", "2-network", "3-security", "4-project"]'
     outputs:
       environment: ${{ steps.determine-env.outputs.environment }}
       planstages: ${{ steps.determine-stages.outputs.planstages }}
@@ -47,8 +48,8 @@ jobs:
         id: determine-stages
         run: |
           echo "Stage: ${{ github.event.inputs.module-stage }}, modulestage: $MODULESTAGE"
-          [ -z "$MODULESTAGE" ] || ([[ $MODULESTAGE == 0-* ]] && echo 'applystages=["1-bootstrap", "2-network", "3-security", "4-project"]' >> $GITHUB_OUTPUT) || echo "applystages=[\"$MODULESTAGE\"]" >> $GITHUB_OUTPUT
-          echo "planstages=["1-bootstrap", "2-network", "3-security", "4-project"]" >> $GITHUB_OUTPUT
+          [ -z "$MODULESTAGE" ] || ([[ $MODULESTAGE == 0-* ]] && echo "applystages=$ALLSTAGES" >> $GITHUB_OUTPUT) || echo "applystages=[\"$MODULESTAGE\"]" >> $GITHUB_OUTPUT
+          echo "planstages=$ALLSTAGES" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
   plan:
