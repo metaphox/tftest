@@ -63,13 +63,15 @@ jobs:
           terraform_version: 1.5.7
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
       - uses: terraform-linters/setup-tflint@v3
         with:
           tflint_version: v0.48.0
-      - name: Terraform Init
-        env:
-          TF_LOG: DEBUG
+      - name: Terraform init
+        id: tf-init
         run: |
           terraform -chdir=${{ matrix.stages }} init
+      - name: Terraform plan
+        id: tf-plan
+        run: |
           terraform -chdir=${{ matrix.stages }} plan
