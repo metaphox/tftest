@@ -89,7 +89,7 @@ jobs:
       id: tf-plan
       run: |
         export exitcode=0
-        terraform -chdir=${{ matrix.stage }} plan -detailed-exitcode -no-color -out ../${{ matrix.stage }}-tfplan || export exitcode=$?
+        terraform -chdir=${{ matrix.stage }} plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
 
         echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
         
@@ -105,13 +105,13 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.stage }}-tfplan
-        path: ${{ matrix.stage }}-tfplan
+        path: ${{ matrix.stage }}/tfplan
 
     # Create string output of Terraform Plan
     - name: Create String Output
       id: tf-plan-string
       run: |
-        TERRAFORM_PLAN=$(terraform show -no-color ${{ matrix.stage }}-tfplan)
+        TERRAFORM_PLAN=$(terraform -chdir=${{ matrix.stage }} show -no-color tfplan)
         
         delimiter="$(openssl rand -hex 8)"
         echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
@@ -161,6 +161,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.stage }}-tfplan
+          path: ${{ matrix.stage }}/tfplan
 
       # Terraform Apply
       - name: Terraform Apply
