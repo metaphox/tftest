@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       environment: ${{ steps.determine-env.outputs.environment }}
-      stages: ${{ steps.determine-stages.outputs.stages }}
+      applystages: ${{ steps.determine-stages.outputs.outputstages }}
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: determine env
@@ -44,7 +44,7 @@ jobs:
       - name: determine stages
         id: determine-stages
         run: |
-          echo "Stage: ${{ github.event.inputs.module-stage }}"
+          [ -z "$STAGE" ] || [[ $STAGE == 0-* ]] && echo 'applystages=[ "1-bootstrap", "2-network", "3-security", "4-project"]' >> $GITHUB_OUTPUT || echo "$STAGE" >> $GITHUB_OUTPUT
           echo "stages=1-bootstrap,2-network,3-security,4-project" >> $GITHUB_OUTPUT
 
   plan:
@@ -75,3 +75,32 @@ jobs:
         id: tf-plan
         run: |
           terraform -chdir=${{ matrix.stages }} plan
+  
+  apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    if: ${{ needs.prepare.outputs.applystages != '' }}
+    needs: [plan]
+    strategy:
+      matrix:
+        stages: ${{ fromJson(needs.prepare.outputs.applystages) }}
+    environment: ${{ needs.prepare.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - uses: terraform-linters/setup-tflint@v3
+        with:
+          tflint_version: v0.48.0
+      - name: Terraform init
+        id: tf-init
+        run: |
+          terraform -chdir=${{ matrix.stages }} init
+      - name: Terraform apply
+        id: tf-apply
+        run: |
+          terraform -chdir=${{ matrix.stages }} apply -auto-approve
