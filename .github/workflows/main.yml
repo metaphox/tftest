@@ -46,7 +46,7 @@ jobs:
         id: determine-stages
         run: |
           echo "Stage: ${{ github.event.inputs.module-stage }}, modulestage: $MODULESTAGE"
-          [ -z "$MODULESTAGE" ] || ([[ $MODULESTAGE == 0-* ]] && echo 'applystages=[ "1-bootstrap", "2-network", "3-security", "4-project"]' >> $GITHUB_OUTPUT) || echo "applystages=$MODULESTAGE" >> $GITHUB_OUTPUT
+          [ -z "$MODULESTAGE" ] || ([[ $MODULESTAGE == 0-* ]] && echo 'applystages=["1-bootstrap", "2-network", "3-security", "4-project"]' >> $GITHUB_OUTPUT) || echo "applystages=$MODULESTAGE" >> $GITHUB_OUTPUT
           echo "stages=1-bootstrap,2-network,3-security,4-project" >> $GITHUB_OUTPUT
 
   plan:
@@ -83,6 +83,8 @@ jobs:
     name: Terraform Apply
     runs-on: ubuntu-latest
     if: ${{ needs.prepare.outputs.applystages != '' }}
+    env:
+      APPLYSTAGES: ${{ needs.prepare.outputs.applystages }}
     needs: [plan]
     # strategy:
     #   matrix:
@@ -94,3 +96,4 @@ jobs:
         id: tf-apply
         run: |
           echo "Apply stages: ${{ needs.prepare.outputs.applystages }}"
+          env
