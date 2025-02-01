@@ -20,7 +20,10 @@ on:
         - 2-network
         - 3-security
         - 4-project
-      boolean-test:
+      force:
+        description: 'Force execution'
+        required: true
+        default: false
         type: boolean
 
 env:
@@ -49,5 +52,6 @@ jobs:
       - name: determine stages
         id: determine-stages
         run: |
-          echo "${{ github.event.inputs.bollean-test && 'a' || '' }}"
+          echo "::notice ::Running utility script with inputs: ${{ github.event.inputs }}, force: ${{ github.event.inputs.force }}"
+          echo ${{ github.event.inputs.force && '--force' || '' }}
   
