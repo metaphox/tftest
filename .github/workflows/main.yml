@@ -51,9 +51,7 @@ jobs:
           echo "environment=prod" >> $GITHUB_OUTPUT
       
       - run: |
-          echo "Action: ${{ github.event.inputs.action }}"
-          echo "Parameters: ${{ github.event.inputs.parameters }}"
-          echo "Dry run: ${{ github.event.inputs.dry_run }}"
+          echo "module-stage: ${{ github.event.inputs.module-stage }}"
           echo "Force: ${{ github.event.inputs.force }}"
       
       - run: |
