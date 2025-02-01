@@ -49,9 +49,14 @@ jobs:
         id: determine-env
         run: |
           echo "environment=prod" >> $GITHUB_OUTPUT
-      - name: determine stages
-        id: determine-stages
-        run: |
-          echo "::notice ::Running utility script with inputs: ${{ github.event.inputs }}, force: ${{ github.event.inputs.force }}"
+      
+      - run: |
+          echo "Action: ${{ github.event.inputs.action }}"
+          echo "Parameters: ${{ github.event.inputs.parameters }}"
+          echo "Dry run: ${{ github.event.inputs.dry_run }}"
+          echo "Force: ${{ github.event.inputs.force }}"
+      
+      - run: |
+          echo "::notice ::Running utility script with inputs.force: ${{ github.event.inputs.force }}"
           echo ${{ github.event.inputs.force && '--force' || '' }}
   
