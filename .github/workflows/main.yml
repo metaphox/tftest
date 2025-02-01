@@ -49,5 +49,5 @@ jobs:
       - name: determine stages
         id: determine-stages
         run: |
-          echo "${{ github.event.inputs.bollean-test && 'a' || 'b' }}"
+          echo "${{ github.event.inputs.bollean-test && 'a' || '' }}"
   
